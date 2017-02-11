@@ -67,7 +67,7 @@ def process_document(path_to_file):
     if total:
         rate = (100 * sum(cnt for word, cnt in counter.most_common(5))) / total
     else:
-        rate = None
+        rate = 0.
 
     result = {
         'document_name': os.path.basename(path_to_file),
@@ -77,14 +77,15 @@ def process_document(path_to_file):
     return result
 
 
-def calculate(path_to_file_list, database_name, table_name=None, processes=None):
+def calculate(path_to_file_list, database_name=None, table_name=None, processes=None):
     db = DatabaseHandler(db_name=database_name, table_name=table_name)
     db.create_table_if_not_exist()
 
     processes = processes or multiprocessing.cpu_count()
     pool = multiprocessing.Pool(processes=processes)
     documents = pool.map(process_document, path_to_file_list)
-    map(db.insert_document, documents)
+
+    db.insert(documents)
 
 
 if __name__ == '__main__':
@@ -92,4 +93,4 @@ if __name__ == '__main__':
     files_dir_path = os.path.join(path_prefix, 'text_files')
 
     file_path_list = [os.path.join(files_dir_path, x) for x in os.listdir(files_dir_path) if x.endswith('.txt')]
-    calculate(file_path_list, database_name='test')
+    calculate(file_path_list)

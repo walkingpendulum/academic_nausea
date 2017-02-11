@@ -18,9 +18,11 @@ def autocommit_and_autoclose(conn):
 
 
 class DatabaseHandler(object):
-    def __init__(self, db_name, table_name='results'):
-        self.conn = sqlite3.connect(database=db_name)
-        self.table_name = table_name
+    columns = ('document_name', 'rate', 'fraud_words')
+
+    def __init__(self, db_name=None, table_name=None):
+        self.conn = sqlite3.connect(database=db_name or 'test')
+        self.table_name = table_name or 'results'
 
     def create_table_if_not_exist(self):
         create_table_statement = (
@@ -42,16 +44,28 @@ class DatabaseHandler(object):
                 # index already exists
                 pass
 
-    def insert_document(self, params):
-        insert_statement = 'INSERT OR REPLACE INTO {table} VALUES ({values})'.format(
-            table=self.table_name, values=', '.join(params),
+    def format_document_for_insert_statement(self, document):
+        values = [
+            '"%s"' % document['document_name'],
+            '{:.2f}'.format(document['rate']),
+            '"%s"' % list(document['fraud_words']),
+        ]
+
+        return '(%s)' % ', '.join(values)
+
+    def insert(self, document_list):
+        values = map(self.format_document_for_insert_statement, document_list)
+
+        insert_statement = 'INSERT OR REPLACE INTO {table} VALUES {values}'.format(
+            table=self.table_name, values=', '.join(values),
         )
+
         with autocommit_and_autoclose(self.conn) as cursor:
             cursor.execute(insert_statement)
 
     def list_table(self):
         with autocommit_and_autoclose(self.conn) as cursor:
             it = cursor.execute('select * from {}'.format(self.table_name))
-            result = [dict(zip(['document_name', 'rate', 'fraud_words'], chunk)) for chunk in it]
+            result = [dict(zip(self.columns, chunk)) for chunk in it]
 
         return result
