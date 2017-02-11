@@ -1,1 +1,12 @@
 #!/usr/bin/env bash
+
+pip3 install virtualenv
+
+mkdir -p .venv
+virtualenv --python=python3.5 --no-site-packages .venv
+
+source .venv/bin/activate
+
+pip install --upgrade pip
+pip install -r requirements.txt
+python -c "import nltk; nltk.download('stopwords')"
