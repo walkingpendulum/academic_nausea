@@ -1,0 +1,7 @@
+appdirs==1.4.0
+lorem-ipsum-generator==0.3
+nltk==3.2.2
+packaging==16.8
+pyparsing==2.1.10
+six==1.10.0
+transliterate==1.9
