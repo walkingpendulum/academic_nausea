@@ -1,4 +1,5 @@
 import contextlib
+import os
 import sqlite3  # предпочитаю SQLAlchemy с его ORM, но к использованию рекомендовался sqlite3
 
 
@@ -21,7 +22,8 @@ class DatabaseHandler(object):
     columns = ('document_name', 'rate', 'fraud_words')
 
     def __init__(self, db_name=None, table_name=None):
-        self.conn = sqlite3.connect(database=db_name or 'test')
+        self.db_name = db_name or 'test'
+        self.conn = sqlite3.connect(database=self.db_name)
         self.table_name = table_name or 'results'
 
     def create_table_if_not_exist(self):
@@ -59,6 +61,9 @@ class DatabaseHandler(object):
         insert_statement = 'INSERT OR REPLACE INTO {table} VALUES {values}'.format(
             table=self.table_name, values=', '.join(values),
         )
+
+        print('Table name: %s' % self.table_name)
+        print('Saving to database located in %s' % os.path.join(os.path.dirname(__file__), self.db_name))
 
         with autocommit_and_autoclose(self.conn) as cursor:
             cursor.execute(insert_statement)

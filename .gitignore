@@ -2,3 +2,4 @@
 .idea/*
 .venv*/
 academic_nausea/text_files/
+build/

@@ -44,7 +44,7 @@ def tokenize(path_to_file):
     def _tokenize(string):
         yield from (x.group(0) for x in re.finditer(r"[A-Za-zА-Яа-я]+", string))
 
-    with open(path_to_file) as f:
+    with open(path_to_file, encoding='utf=8') as f:
         yield from itertools.chain.from_iterable(_tokenize(line) for line in f)
 
 
@@ -91,7 +91,6 @@ def calculate(path_to_file_list, database_name=None, table_name=None, processes=
     processes = processes or multiprocessing.cpu_count()
     pool = multiprocessing.Pool(processes=processes)
     documents = pool.map(process_document, path_to_file_list)
-
     db.insert(documents)
 
 
