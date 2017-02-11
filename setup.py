@@ -10,4 +10,5 @@ setup(
       url='https://github.com/walkingpendulum/academic_nausea',
       packages=['academic_nausea'],
       install_requires=[x for x in open('requirements.txt').read().split('\n') if x],
+      scripts=['bin/nausea']
 )

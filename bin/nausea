@@ -1,0 +1,81 @@
+#! /usr/bin/env python3
+import argparse
+import itertools
+import os
+import sys
+
+from academic_nausea import calculate, DatabaseHandler
+
+
+class NauseaCLIHandler(object):
+    def __init__(self):
+        main_cmds = ('calculate', 'list')
+
+        def main_cmds_pred(cmd):
+            return cmd not in main_cmds
+
+        parser = argparse.ArgumentParser(
+            description='academic nausea computational routine',
+            epilog=(
+                'Commands:\n'
+                '  calculate  calculate nausea rate for file'
+                '  list       list rates and metadata for all processed documents'
+                '\nRun nausea COMMAND --help for more information on a command.'
+            ),
+            formatter_class=argparse.RawTextHelpFormatter,
+        )
+        parser.add_argument("-d", "--database", dest='database', help="database name to store result", metavar=None)
+        parser.add_argument("--table", dest='table', help="table name to store result (default 'results')", metavar=None)
+        parser.add_argument('command')
+
+        self.main_parser = parser
+        args = itertools.takewhile(main_cmds_pred, sys.argv[1:])
+        rest_args = itertools.dropwhile(main_cmds_pred, sys.argv[1:])
+
+        self.argv = list(args) + [next(rest_args)]
+        self.rest_args = list(rest_args)
+        self.database = None
+        self.table = None
+
+    def handle_args(self):
+        args = self.main_parser.parse_args(self.argv)
+        self.database = args.database
+        self.table = args.table
+
+        try:
+            method = getattr(self, args.command)
+        except AttributeError:
+            sys.stderr.write('error: unknown command %s\n' % args.attr)
+            self.main_parser.print_help()
+            sys.exit(2)
+
+        method()
+
+    def calculate(self):
+        calc_parser = argparse.ArgumentParser()
+
+        calc_parser.add_argument("file", help='path to file', nargs='+')
+        calc_parser.add_argument("--processes", dest='processes', help="number of processes for multiprocessing mode")
+        args = calc_parser.parse_args(self.rest_args)
+
+        options = dict(
+            table_name=self.table,
+            database_name=self.database,
+            processes=args.processes,
+        )
+        try:
+            # relative paths first
+            relative_file_names = [os.path.join(os.getcwd(), file_name) for file_name in args.file]
+            calculate(relative_file_names, **options)
+        except FileNotFoundError:
+            # try absolute paths second
+            calculate(args.file, **options)
+
+    def list(self):
+        db = DatabaseHandler(db_name=self.database, table_name=self.table)
+        print(db.list_table())
+
+
+if __name__ == '__main__':
+    cli = NauseaCLIHandler()
+    cli.handle_args()
