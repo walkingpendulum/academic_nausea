@@ -18,8 +18,8 @@ class NauseaCLIHandler(object):
             description='academic nausea computational routine',
             epilog=(
                 'Commands:\n'
-                '  calculate  calculate nausea rate for file'
-                '  list       list rates and metadata for all processed documents'
+                '  calculate  calculate nausea rate for file\n'
+                '  list       list rates and metadata for all processed documents\n'
                 '\nRun nausea COMMAND --help for more information on a command.'
             ),
             formatter_class=argparse.RawTextHelpFormatter,
@@ -29,11 +29,11 @@ class NauseaCLIHandler(object):
         parser.add_argument('command')
 
         self.main_parser = parser
-        args = itertools.takewhile(main_cmds_pred, sys.argv[1:])
-        rest_args = itertools.dropwhile(main_cmds_pred, sys.argv[1:])
+        args = list(itertools.takewhile(main_cmds_pred, sys.argv[1:]))
+        rest_args = list(itertools.dropwhile(main_cmds_pred, sys.argv[1:]))
 
-        self.argv = list(args) + [next(rest_args)]
-        self.rest_args = list(rest_args)
+        self.argv = args + rest_args[:1]
+        self.rest_args = rest_args[1:]
         self.database = None
         self.table = None
 
@@ -52,10 +52,13 @@ class NauseaCLIHandler(object):
         method()
 
     def calculate(self):
-        calc_parser = argparse.ArgumentParser()
+        calc_parser = argparse.ArgumentParser(
+            description='Run rate calculation for arbitrary file list'
+        )
 
         calc_parser.add_argument("file", help='path to file', nargs='+')
-        calc_parser.add_argument("--processes", dest='processes', help="number of processes for multiprocessing mode")
+        calc_parser.add_argument("--processes", dest='processes', help="number of processes for multiprocessing mode",
+                                 metavar=None)
         args = calc_parser.parse_args(self.rest_args)
 
         options = dict(
@@ -72,8 +75,22 @@ class NauseaCLIHandler(object):
             calculate(args.file, **options)
 
     def list(self):
+        list_parser = argparse.ArgumentParser(
+            description='List all calculation results'
+        )
+        list_parser.add_argument('document', help='document name to list results', nargs='?')
+        args = list_parser.parse_args(self.rest_args)
+
         db = DatabaseHandler(db_name=self.database, table_name=self.table)
-        print(db.list_table())
+        result = db.list_table(document_name=args.document)
+        for data_dict in sorted(result, key=lambda t: t['document_name']):
+            line = (
+                'document name: {data[document_name]} '
+                '-- rate: {data[rate]}% '
+                '-- fraud words: {data[fraud_words]}'
+            ).format(data=data_dict)
+
+            print(line)
 
 
 if __name__ == '__main__':
