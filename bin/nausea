@@ -24,8 +24,8 @@ class NauseaCLIHandler(object):
             ),
             formatter_class=argparse.RawTextHelpFormatter,
         )
-        parser.add_argument("-d", "--database", dest='database', help="database name to store result", metavar=None)
-        parser.add_argument("--table", dest='table', help="table name to store result (default 'results')", metavar=None)
+        parser.add_argument("-d", "--database", dest='database', help="database name to store result", metavar='')
+        parser.add_argument("--table", dest='table', help="table name to store result (default 'results')", metavar='')
         parser.add_argument('command')
 
         self.main_parser = parser
@@ -56,9 +56,9 @@ class NauseaCLIHandler(object):
             description='Run rate calculation for arbitrary file list'
         )
 
-        calc_parser.add_argument("file", help='path to file', nargs='+')
+        calc_parser.add_argument("file", help='path to file', nargs='+', metavar='')
         calc_parser.add_argument("--processes", dest='processes', help="number of processes for multiprocessing mode",
-                                 metavar=None)
+                                 metavar='', type=int)
         args = calc_parser.parse_args(self.rest_args)
 
         options = dict(
@@ -78,7 +78,7 @@ class NauseaCLIHandler(object):
         list_parser = argparse.ArgumentParser(
             description='List all calculation results'
         )
-        list_parser.add_argument('document', help='document name to list results', nargs='?')
+        list_parser.add_argument('document', help='document name to list results', nargs='?', metavar='')
         args = list_parser.parse_args(self.rest_args)
 
         db = DatabaseHandler(db_name=self.database, table_name=self.table)
