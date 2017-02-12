@@ -21,8 +21,8 @@ def autocommit_and_autoclose(conn):
 class DatabaseHandler(object):
     columns = ('document_name', 'rate', 'fraud_words')
 
-    def __init__(self, db_name=None, table_name=None):
-        self.db_name = db_name or 'test'
+    def __init__(self, database=None, table_name=None):
+        self.db_name = database or 'test'
         self.conn = sqlite3.connect(database=self.db_name)
         self.table_name = table_name or 'results'
         self.fraud_words_table = '%s__fraud_matching' % self.table_name
@@ -95,6 +95,11 @@ class DatabaseHandler(object):
             self.insert_one(doc)
 
     def list_table(self, document_name=None):
+        """ Extract document data from db. If document_name is None, extract all data.
+
+        :param document_name: str or None
+        :return: list with dict objects with structure {'document_name': str, 'rate': str, 'fraud_words': list}
+        """
         inner_select_statement = (
             'select '
                 'a.document_name as document_name'

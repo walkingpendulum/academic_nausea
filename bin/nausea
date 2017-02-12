@@ -24,7 +24,7 @@ class NauseaCLIHandler(object):
             ),
             formatter_class=argparse.RawTextHelpFormatter,
         )
-        parser.add_argument("-d", "--database", dest='database', help="database name to store result", metavar='')
+        parser.add_argument("-d", "--database", dest='database', help="database file path to store result", metavar='')
         parser.add_argument("--table", dest='table', help="table name to store result (default 'results')", metavar='')
         parser.add_argument('command')
 
@@ -63,7 +63,7 @@ class NauseaCLIHandler(object):
 
         options = dict(
             table_name=self.table,
-            database_name=self.database,
+            database=self.database,
             processes=args.processes,
         )
         try:
@@ -81,7 +81,7 @@ class NauseaCLIHandler(object):
         list_parser.add_argument('document', help='document name to list results', nargs='?', metavar='')
         args = list_parser.parse_args(self.rest_args)
 
-        db = DatabaseHandler(db_name=self.database, table_name=self.table)
+        db = DatabaseHandler(database=self.database, table_name=self.table)
         result = db.list_table(document_name=args.document)
         for data_dict in sorted(result, key=lambda t: t['document_name']):
             line = (
