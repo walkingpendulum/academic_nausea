@@ -3,6 +3,7 @@ import itertools
 import multiprocessing
 import os
 import re
+import traceback
 
 import nltk.corpus as corpus
 import transliterate
@@ -52,22 +53,27 @@ def process_document(path_to_file):
     fraud_word_list = []
     normalized_word_list = []
 
-    for word in tokenize(path_to_file):
-        word = word.lower()
-        if detect_fraud(word):
-            # априори неизвестно, в какую сторону нужно нормализовывать слово с заменами, в
-            # кириллицу или в латиницу. поэтому я провел небольшое исследование по всем текстовым
-            # файлам, шедшим с заданием, и изучил список слов, в которых использовались буквы двух
-            # алфавитов одновременно. выяснилось, что примерно из 1200 уникальных случаев мошенничества
-            # количество исходно английских слов пренебрежимо мало (такие слова представляют собой
-            # названия фирм или форматов/стандартов), поэтому было принято решение нормализовывать
-            # всегда в сторону кирилицы.
-            fraud_word_list.append(word)
-            word = transliterate.translit(word, 'ru')
+    try:
+        for word in tokenize(path_to_file):
+            word = word.lower()
+            if detect_fraud(word):
+                # априори неизвестно, в какую сторону нужно нормализовывать слово с заменами, в
+                # кириллицу или в латиницу. поэтому я провел небольшое исследование по всем текстовым
+                # файлам, шедшим с заданием, и изучил список слов, в которых использовались буквы двух
+                # алфавитов одновременно. выяснилось, что примерно из 1200 уникальных случаев мошенничества
+                # количество исходно английских слов пренебрежимо мало (такие слова представляют собой
+                # названия фирм или форматов/стандартов), поэтому было принято решение нормализовывать
+                # всегда в сторону кирилицы.
+                fraud_word_list.append(word)
+                word = transliterate.translit(word, 'ru')
 
-        normalized_word = ru_stemmer.stem(word)
-        if normalized_word not in normalized_stopwords_set:
-            normalized_word_list.append(normalized_word)
+            normalized_word = ru_stemmer.stem(word)
+            if normalized_word not in normalized_stopwords_set:
+                normalized_word_list.append(normalized_word)
+    except Exception:
+        print('Something wrong, skip %s' % path_to_file)
+        traceback.print_exc()
+        return
 
     counter = collections.Counter(normalized_word_list)
     total = sum(counter.values())
