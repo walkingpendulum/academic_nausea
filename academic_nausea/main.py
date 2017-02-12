@@ -11,7 +11,6 @@ from nltk.stem.snowball import RussianStemmer
 
 from .table import DatabaseHandler
 
-
 ru_stemmer = RussianStemmer()
 normalized_stopwords_set = set(map(ru_stemmer.stem, corpus.stopwords.words('russian')))
 en_detector = re.compile(r"[A-Za-z]+")
@@ -92,11 +91,10 @@ def process_document(path_to_file):
 
 def calculate(path_to_file_list, database_name=None, table_name=None, processes=None):
     db = DatabaseHandler(db_name=database_name, table_name=table_name)
-    db.create_table_if_not_exist()
 
     processes = processes or multiprocessing.cpu_count()
     pool = multiprocessing.Pool(processes=processes)
-    documents = pool.map(process_document, path_to_file_list)
+    documents = [x for x in pool.map(process_document, path_to_file_list) if x]
     db.insert(documents)
 
 
